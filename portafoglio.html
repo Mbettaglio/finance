@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafoglio</title>
+  <link rel="manifest" href="manifest_portafoglio.json">
+  <meta name="theme-color" content="#0f0f1a">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #eee;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* TITOLO */
+    h1 {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: #ffffff;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    /* RIQUADRO TOTALE */
+    #totale-box {
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      background: #1e1e30;
+      border: 1px solid #ffffff;
+      border-radius: 12px;
+      position: relative;
+    }
+    #totale-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    #totale-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    #toggle-visibilita {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    #totale-valore {
+      font-size: 1.9rem;
+      font-weight: 300;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+    #totale-valore.nascosto::after {
+      content: '••••••';
+      letter-spacing: 0.1em;
+    }
+    #totale-valore.nascosto span { display: none; }
+    #totale-sub {
+      font-size: 0.82rem;
+      color: #888;
+      margin-top: 6px;
+      line-height: 1.8;
+    }
+    #totale-sub.nascosto { filter: blur(4px); pointer-events: none; }
+
+    #deltaobb-riga {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #deltaobb-label { color: #888; }
+    #deltaobb-valore { font-weight: 600; }
+    #btn-modifica-obb {
+      background: none;
+      border: 1px solid #444;
+      color: #888;
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* CARD ETF */
+    .card {
+      background: #1e5235;
+      border: 1px solid #3d8a5a;
+      border-radius: 14px;
+      padding: 14px 14px 10px;
+      margin-bottom: 12px;
+    }
+    .card-body {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .col-sx {
+      flex: 1;
+    }
+    .prezzo-quota {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .prezzo-quota-label {
+      font-size: 0.68rem;
+      color: #aaa;
+      margin-top: 1px;
+    }
+    .col-dx {
+      min-width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding-top: 2px;
+      text-align: right;
+    }
+    .etf-nome {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .var-giorn {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .riga-dato {
+      font-size: 0.8rem;
+      color: #a8d8b8;
+      line-height: 1.75;
+    }
+    .riga-dato strong { color: #fff; }
+    .pos { color: #4caf82; }
+    .neg { color: #e07070; }
+    .neu { color: #aaa; }
+
+    .btn-modifica {
+      display: inline-block;
+      margin-top: 8px;
+      background: none;
+      border: 1px solid #3d8a5a;
+      color: #a8d8b8;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .caricamento { color: #888; font-size: 0.85rem; }
+
+    /* MODALI */
+    .modale-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modale-overlay.aperto { display: flex; }
+    .modale {
+      background: #2a2d4a;
+      border: 1px solid #4e5280;
+      border-radius: 14px;
+      padding: 20px;
+      width: 88%;
+      max-width: 340px;
+    }
+    .modale h2 { font-size: 1rem; margin-bottom: 14px; color: #fff; }
+    .campo { margin-bottom: 12px; }
+    .campo label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; }
+    .campo input {
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid #4e5280;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      padding: 8px 10px;
+    }
+    .modale-bottoni { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-salva {
+      flex: 1; background: #3a4a9f; border: none;
+      color: #fff; padding: 10px; border-radius: 10px;
+      font-size: 0.9rem; cursor: pointer;
+    }
+    .btn-annulla {
+      flex: 1; background: none; border: 1px solid #4e5280;
+      color: #aaa; padding: 10px; border-radius: 10px;
+      font-size: 0.9rem; cursor: pointer;
+    }
+
+    #refresh {
+      display: block; margin: 16px auto 0;
+      background: none; border: 1px solid #4e5280;
+      color: #a0a8d8; padding: 8px 24px;
+      border-radius: 20px; font-size: 0.88rem; cursor: pointer;
+    }
+    #aggiornato {
+      text-align: center; color: #444;
+      font-size: 0.78rem; margin-top: 8px; margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>PORTAFOGLIO</h1>
+
+<div id="totale-box">
+  <div id="totale-header">
+    <span id="totale-label">Valore totale</span>
+    <button id="toggle-visibilita" onclick="toggleVisibilita()" title="Mostra/Nascondi">👁</button>
+  </div>
+  <div id="totale-valore" class="nascosto"><span></span></div>
+  <div id="totale-sub" class="nascosto"></div>
+  <div id="deltaobb-riga">
+    <span id="deltaobb-label">Obb26</span>
+    <span id="deltaobb-valore">—</span>
+    <button id="btn-modifica-obb" onclick="apriModaleObb()">✎</button>
+  </div>
+</div>
+
+<div id="cards"></div>
+<button id="refresh" onclick="caricaDati()">↻ Aggiorna</button>
+<div id="aggiornato"></div>
+
+<!-- Modale ETF -->
+<div id="modale-overlay" class="modale-overlay">
+  <div class="modale">
+    <h2 id="modale-titolo">Modifica</h2>
+    <div class="campo">
+      <label>Numero di quote</label>
+      <input type="number" id="input-quote" step="1" min="0">
+    </div>
+    <div class="campo">
+      <label>Prezzo medio di carico (€)</label>
+      <input type="number" id="input-carico" step="0.000001" min="0">
+    </div>
+    <div class="modale-bottoni">
+      <button class="btn-annulla" onclick="chiudiModale()">Annulla</button>
+      <button class="btn-salva" onclick="salvaModifica()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale DeltaObb -->
+<div id="modale-obb-overlay" class="modale-overlay">
+  <div class="modale">
+    <h2>Modifica valore di riferimento</h2>
+    <div class="campo">
+      <label>Valore di riferimento (€)</label>
+      <input type="number" id="input-obb" step="0.01" min="0">
+    </div>
+    <div class="modale-bottoni">
+      <button class="btn-annulla" onclick="chiudiModaleObb()">Annulla</button>
+      <button class="btn-salva" onclick="salvaObb()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DEFAULT_PORTAFOGLIO = [
+    { ticker: 'SWDA.MI', nome: 'MSCI World',    quote: 161, carico: 98.748815  },
+    { ticker: 'XMME.MI', nome: 'MSCI Emerging', quote: 51,  carico: 59.316588  },
+    { ticker: 'XSX6.MI', nome: 'STOXX 600',     quote: 39,  carico: 139.681023 },
+    { ticker: 'IWVL.MI', nome: 'MSCI Value',    quote: 50,  carico: 53.010798  },
+    { ticker: 'EM57.MI',  nome: 'OBBL 5/7 EU',  quote: 93,  carico: 158.198165 },
+  ];
+
+  const DEFAULT_RIF_OBB = 3569.81;
+
+  function caricaPortafoglio() {
+    const s = localStorage.getItem('portafoglio');
+    return s ? JSON.parse(s) : DEFAULT_PORTAFOGLIO.map(e => ({...e}));
+  }
+  function salvaPortafoglio(p) { localStorage.setItem('portafoglio', JSON.stringify(p)); }
+
+  function caricaRifObb() {
+    const s = localStorage.getItem('rifObb');
+    return s ? parseFloat(s) : DEFAULT_RIF_OBB;
+  }
+  function salvaRifObb(v) { localStorage.setItem('rifObb', v.toString()); }
+
+  function caricaVisibilita() { return localStorage.getItem('totaleVisibile') === 'true'; }
+  function salvaVisibilita(v) { localStorage.setItem('totaleVisibile', v.toString()); }
+
+  function fmt(n, dec = 2) {
+    return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function segno(n) { return n >= 0 ? '+' : ''; }
+  function classe(n) { return n > 0 ? 'pos' : n < 0 ? 'neg' : 'neu'; }
+
+  // Toggle visibilità totale
+  let visibile = caricaVisibilita();
+  function toggleVisibilita() {
+    visibile = !visibile;
+    salvaVisibilita(visibile);
+    aggiornaVisibilita();
+  }
+  function aggiornaVisibilita() {
+    const v = document.getElementById('totale-valore');
+    const s = document.getElementById('totale-sub');
+    if (visibile) {
+      v.classList.remove('nascosto');
+      s.classList.remove('nascosto');
+      document.getElementById('toggle-visibilita').textContent = '👁';
+    } else {
+      v.classList.add('nascosto');
+      s.classList.add('nascosto');
+      document.getElementById('toggle-visibilita').textContent = '🙈';
+    }
+  }
+
+  // Modale ETF
+  let indiceDaModificare = null;
+  function apriModale(i) {
+    const p = caricaPortafoglio();
+    indiceDaModificare = i;
+    document.getElementById('modale-titolo').textContent = p[i].nome;
+    document.getElementById('input-quote').value = p[i].quote;
+    document.getElementById('input-carico').value = p[i].carico;
+    document.getElementById('modale-overlay').classList.add('aperto');
+  }
+  function chiudiModale() {
+    document.getElementById('modale-overlay').classList.remove('aperto');
+    indiceDaModificare = null;
+  }
+  function salvaModifica() {
+    if (indiceDaModificare === null) return;
+    const p = caricaPortafoglio();
+    const q = parseFloat(document.getElementById('input-quote').value);
+    const c = parseFloat(document.getElementById('input-carico').value.replace(',', '.'));
+    if (!isNaN(q) && !isNaN(c)) { p[indiceDaModificare].quote = q; p[indiceDaModificare].carico = c; salvaPortafoglio(p); }
+    chiudiModale();
+    caricaDati();
+  }
+
+  // Modale DeltaObb
+  function apriModaleObb() {
+    document.getElementById('input-obb').value = caricaRifObb();
+    document.getElementById('modale-obb-overlay').classList.add('aperto');
+  }
+  function chiudiModaleObb() {
+    document.getElementById('modale-obb-overlay').classList.remove('aperto');
+  }
+  function salvaObb() {
+    const v = parseFloat(document.getElementById('input-obb').value.replace(',', '.'));
+    if (!isNaN(v)) salvaRifObb(v);
+    chiudiModaleObb();
+    caricaDati();
+  }
+
+  async function fetchPrezzo(ticker) {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+    const proxy = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxy);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const meta = json.chart.result[0].meta;
+    return {
+      prezzoCorrente: meta.regularMarketPrice,
+      chiusuraPrecedente: meta.chartPreviousClose || meta.previousClose
+    };
+  }
+
+  async function caricaDati() {
+    const portafoglio = caricaPortafoglio();
+    const rifObb = caricaRifObb();
+    const container = document.getElementById('cards');
+
+    document.getElementById('totale-valore').innerHTML = '<span>—</span>';
+    document.getElementById('totale-sub').textContent = 'Caricamento…';
+    document.getElementById('deltaobb-valore').textContent = '—';
+    aggiornaVisibilita();
+
+    container.innerHTML = portafoglio.map((e, i) => `
+      <div class="card">
+        <div class="card-body">
+          <div class="col-sx">
+            <div class="etf-nome">${e.nome}</div>
+            <div class="caricamento">Caricamento…</div>
+          </div>
+          <div class="col-dx">
+            <div class="caricamento">…</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    let totaleValore = 0, totaleCarico = 0, totalePLGiorn = 0;
+
+    for (let i = 0; i < portafoglio.length; i++) {
+      const etf = portafoglio[i];
+      try {
+        const { prezzoCorrente, chiusuraPrecedente } = await fetchPrezzo(etf.ticker);
+
+        const valore      = prezzoCorrente * etf.quote;
+        const valoreCarico= etf.carico * etf.quote;
+        const plTotale    = valore - valoreCarico;
+        const plPercTot   = (plTotale / valoreCarico) * 100;
+        const varGiorn    = ((prezzoCorrente - chiusuraPrecedente) / chiusuraPrecedente) * 100;
+        const plGiorn     = (prezzoCorrente - chiusuraPrecedente) * etf.quote;
+
+        totaleValore  += valore;
+        totaleCarico  += valoreCarico;
+        totalePLGiorn += plGiorn;
+
+        const cV = classe(varGiorn);
+        const cT = classe(plTotale);
+
+        container.children[i].innerHTML = `
+          <div class="card-body">
+            <div class="col-sx">
+              <div class="etf-nome">${etf.nome}</div>
+              <div class="var-giorn ${cV}">${segno(varGiorn)}${fmt(varGiorn)}%</div>
+              <div class="riga-dato">P/L giorn. <strong class="${cV}">${segno(plGiorn)}€ ${fmt(Math.abs(plGiorn))}</strong></div>
+              <div class="riga-dato">${etf.quote} quote · <strong>€ ${fmt(valore)}</strong></div>
+              <div class="riga-dato">P/L totale <strong class="${cT}">${segno(plTotale)}€ ${fmt(Math.abs(plTotale))} (${segno(plPercTot)}${fmt(plPercTot)}%)</strong></div>
+            </div>
+            <div class="col-dx">
+              <div class="prezzo-quota">€ ${fmt(prezzoCorrente)}</div>
+              <div class="prezzo-quota-label">quota</div>
+            </div>
+          </div>
+          <button class="btn-modifica" onclick="apriModale(${i})">✎ modifica</button>
+        `;
+      } catch(e) {
+        container.children[i].innerHTML = `
+          <div class="card-body">
+            <div class="col-sx">
+              <div class="etf-nome">${etf.nome}</div>
+              <div class="caricamento" style="color:#e07070">Dati non disponibili</div>
+            </div>
+            <div class="col-dx"><div class="caricamento">—</div></div>
+          </div>
+          <button class="btn-modifica" onclick="apriModale(${i})">✎ modifica</button>
+        `;
+      }
+    }
+
+    if (totaleValore > 0) {
+      const plTot     = totaleValore - totaleCarico;
+      const plTotPerc = (plTot / totaleCarico) * 100;
+      const varGiornPerc = totalePLGiorn / (totaleValore - totalePLGiorn) * 100;
+      const cG = classe(totalePLGiorn);
+      const cT = classe(plTot);
+
+      document.getElementById('totale-valore').innerHTML =
+        `<span>€ ${fmt(totaleValore)}</span>`;
+
+      document.getElementById('totale-sub').innerHTML =
+        `Oggi <span class="${cG}">${segno(totalePLGiorn)}€ ${fmt(Math.abs(totalePLGiorn))} (${segno(varGiornPerc)}${fmt(varGiornPerc)}%)</span><br>
+         P/L totale <span class="${cT}">${segno(plTot)}€ ${fmt(Math.abs(plTot))} (${segno(plTotPerc)}${fmt(plTotPerc)}%)</span>`;
+
+      document.getElementById('deltaobb-valore').innerHTML =
+        `€ ${fmt(rifObb)}`;
+    }
+
+    aggiornaVisibilita();
+    const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('aggiornato').textContent = `Aggiornato alle ${ora}`;
+  }
+
+  caricaDati();
+</script>
+</body>
+</html>
