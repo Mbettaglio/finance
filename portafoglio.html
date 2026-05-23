@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafoglio</title>
+  <link rel="manifest" href="manifest_portafoglio.json">
+  <meta name="theme-color" content="#0f0f1a">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #eee;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      color: #ffffff;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    #totale-box {
+      text-align: center;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #1e1e30;
+      border: 1px solid #ffffff;
+      border-radius: 12px;
+    }
+    #totale-valore {
+      font-size: 2rem;
+      font-weight: 300;
+      color: #fff;
+    }
+    #totale-sub {
+      font-size: 0.82rem;
+      color: #888;
+      margin-top: 4px;
+    }
+    .card {
+      background: #1e5235;
+      border: 1px solid #3d8a5a;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .ticker { font-weight: 700; font-size: 1rem; color: #fff; }
+    .variazione {
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .pos { background: #1a3a2a; color: #4caf82; }
+    .neg { background: #3a1a1a; color: #e07070; }
+    .neu { background: #2a2a3a; color: #aaa; }
+    .prezzo-corrente { font-size: 1.6rem; font-weight: 300; color: #fff; }
+    .dettagli {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #a0a8d8;
+      line-height: 1.8;
+    }
+    .pl { font-weight: 600; }
+    .pl.pos { color: #4caf82; background: none; padding: 0; }
+    .pl.neg { color: #e07070; background: none; padding: 0; }
+
+    /* Modale modifica */
+    .btn-modifica {
+      background: none;
+      border: 1px solid #4e5280;
+      color: #a0a8d8;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #modale-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    #modale-overlay.aperto { display: flex; }
+    #modale {
+      background: #2a2d4a;
+      border: 1px solid #4e5280;
+      border-radius: 14px;
+      padding: 20px;
+      width: 88%;
+      max-width: 340px;
+    }
+    #modale h2 { font-size: 1rem; margin-bottom: 14px; color: #fff; }
+    .campo { margin-bottom: 12px; }
+    .campo label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; }
+    .campo input {
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid #4e5280;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      padding: 8px 10px;
+    }
+    .modale-bottoni {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn-salva {
+      flex: 1;
+      background: #3a4a9f;
+      border: none;
+      color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .btn-annulla {
+      flex: 1;
+      background: none;
+      border: 1px solid #4e5280;
+      color: #aaa;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    #refresh {
+      display: block;
+      margin: 16px auto 0;
+      background: none;
+      border: 1px solid #4e5280;
+      color: #a0a8d8;
+      padding: 8px 24px;
+      border-radius: 20px;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    #aggiornato {
+      text-align: center;
+      color: #444;
+      font-size: 0.78rem;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+    .caricamento { color: #666; font-size: 0.85rem; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<h1>PORTAFOGLIO</h1>
+<div id="totale-box">
+  <div id="totale-valore">—</div>
+  <div id="totale-sub">Caricamento…</div>
+</div>
+<div id="cards"></div>
+<button id="refresh" onclick="caricaDati()">↻ Aggiorna</button>
+<div id="aggiornato"></div>
+
+<!-- Modale modifica -->
+<div id="modale-overlay">
+  <div id="modale">
+    <h2 id="modale-titolo">Modifica</h2>
+    <div class="campo">
+      <label>Numero di quote</label>
+      <input type="number" id="input-quote" step="1" min="0">
+    </div>
+    <div class="campo">
+      <label>Prezzo medio di carico (€)</label>
+      <input type="number" id="input-carico" step="0.000001" min="0">
+    </div>
+    <div class="modale-bottoni">
+      <button class="btn-annulla" onclick="chiudiModale()">Annulla</button>
+      <button class="btn-salva" onclick="salvaModifica()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DEFAULT_PORTAFOGLIO = [
+    { ticker: 'SWDA.MI', nome: 'MSCI World',    quote: 161, carico: 98.748815  },
+    { ticker: 'XMME.MI', nome: 'MSCI Emerging', quote: 51,  carico: 59.316588  },
+    { ticker: 'XSX6.MI', nome: 'STOXX 600',     quote: 39,  carico: 139.681023 },
+    { ticker: 'IWVL.MI', nome: 'MSCI Value',    quote: 50,  carico: 53.010798  },
+    { ticker: 'EM57.MI',  nome: 'OBBL 5/7 EU',  quote: 93,  carico: 158.198165 },
+  ];
+
+  function caricaPortafoglio() {
+    const salvato = localStorage.getItem('portafoglio');
+    return salvato ? JSON.parse(salvato) : DEFAULT_PORTAFOGLIO.map(e => ({...e}));
+  }
+
+  function salvaPortafoglio(p) {
+    localStorage.setItem('portafoglio', JSON.stringify(p));
+  }
+
+  function fmt(n, dec = 2) {
+    return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function segno(n) { return n >= 0 ? '+' : ''; }
+
+  async function fetchPrezzo(ticker) {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+    const proxy = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxy);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const meta = json.chart.result[0].meta;
+    const prezzoCorrente = meta.regularMarketPrice;
+    const chiusuraPrecedente = meta.chartPreviousClose || meta.previousClose;
+    return { prezzoCorrente, chiusuraPrecedente };
+  }
+
+  let indiceDaModificare = null;
+
+  function apriModale(i) {
+    const p = caricaPortafoglio();
+    indiceDaModificare = i;
+    document.getElementById('modale-titolo').textContent = p[i].nome || p[i].ticker.replace('.MI', '');
+    document.getElementById('input-quote').value = p[i].quote;
+    document.getElementById('input-carico').value = p[i].carico;
+    document.getElementById('modale-overlay').classList.add('aperto');
+  }
+
+  function chiudiModale() {
+    document.getElementById('modale-overlay').classList.remove('aperto');
+    indiceDaModificare = null;
+  }
+
+  function salvaModifica() {
+    if (indiceDaModificare === null) return;
+    const p = caricaPortafoglio();
+    const nuoveQuote = parseFloat(document.getElementById('input-quote').value);
+    const nuovoCarico = parseFloat(document.getElementById('input-carico').value.replace(',', '.'));
+    if (!isNaN(nuoveQuote) && !isNaN(nuovoCarico)) {
+      p[indiceDaModificare].quote = nuoveQuote;
+      p[indiceDaModificare].carico = nuovoCarico;
+      salvaPortafoglio(p);
+    }
+    chiudiModale();
+    caricaDati();
+  }
+
+  async function caricaDati() {
+    const portafoglio = caricaPortafoglio();
+    const container = document.getElementById('cards');
+    document.getElementById('totale-valore').textContent = '—';
+    document.getElementById('totale-sub').textContent = 'Caricamento…';
+
+    container.innerHTML = portafoglio.map((e, i) => `
+      <div class="card">
+        <div class="card-header">
+          <span class="ticker">${e.ticker.replace('.MI','')}</span>
+          <button class="btn-modifica" onclick="apriModale(${i})">✎ modifica</button>
+        </div>
+        <div class="caricamento">Caricamento…</div>
+      </div>
+    `).join('');
+
+    let totaleValore = 0;
+    let totaleCarico = 0;
+    let totalePLGiornaliero = 0;
+    let tuttiCaricati = true;
+
+    for (let i = 0; i < portafoglio.length; i++) {
+      const etf = portafoglio[i];
+      try {
+        const { prezzoCorrente, chiusuraPrecedente } = await fetchPrezzo(etf.ticker);
+
+        const valore = prezzoCorrente * etf.quote;
+        const valoreCarico = etf.carico * etf.quote;
+        const plTotale = valore - valoreCarico;
+        const plPerc = ((prezzoCorrente - etf.carico) / etf.carico) * 100;
+        const varGiorn = ((prezzoCorrente - chiusuraPrecedente) / chiusuraPrecedente) * 100;
+        const plGiorn = (prezzoCorrente - chiusuraPrecedente) * etf.quote;
+
+        totaleValore += valore;
+        totaleCarico += valoreCarico;
+        totalePLGiornaliero += plGiorn;
+
+        const classeVar = varGiorn > 0 ? 'pos' : varGiorn < 0 ? 'neg' : 'neu';
+        const classePL = plTotale >= 0 ? 'pos' : 'neg';
+
+        container.children[i].innerHTML = `
+          <div class="card-header">
+            <span class="ticker">${etf.nome || etf.ticker.replace('.MI','')}</span>
+            <span class="variazione ${classeVar}">${segno(varGiorn)}${fmt(varGiorn)}%</span>
+          </div>
+          <div class="prezzo-corrente">€ ${fmt(prezzoCorrente)}</div>
+          <div class="dettagli">
+            ${etf.quote} quote · Valore <strong>€ ${fmt(valore)}</strong><br>
+            Carico € ${fmt(etf.carico)} · P/L giorn. ${segno(plGiorn)}€ ${fmt(Math.abs(plGiorn))}<br>
+            P/L totale <span class="pl ${classePL}">${segno(plTotale)}€ ${fmt(Math.abs(plTotale))} (${segno(plPerc)}${fmt(plPerc)}%)</span>
+          </div>
+          <button class="btn-modifica" style="margin-top:10px" onclick="apriModale(${i})">✎ modifica</button>
+        `;
+      } catch(e) {
+        tuttiCaricati = false;
+        container.children[i].innerHTML = `
+          <div class="card-header">
+            <span class="ticker">${etf.nome || etf.ticker.replace('.MI','')}</span>
+          </div>
+          <div class="caricamento" style="color:#e07070">Dati non disponibili</div>
+          <button class="btn-modifica" style="margin-top:10px" onclick="apriModale(${i})">✎ modifica</button>
+        `;
+      }
+    }
+
+    if (totaleValore > 0) {
+      const plTot = totaleValore - totaleCarico;
+      const plTotPerc = (plTot / totaleCarico) * 100;
+      const varGiornPerc = (totalePLGiornaliero / (totaleValore - totalePLGiornaliero)) * 100;
+      const classeGiorn = totalePLGiornaliero >= 0 ? '#4caf82' : '#e07070';
+
+      document.getElementById('totale-valore').textContent = `€ ${fmt(totaleValore)}`;
+      document.getElementById('totale-sub').innerHTML =
+        `Oggi <span style="color:${classeGiorn}">${segno(totalePLGiornaliero)}€ ${fmt(Math.abs(totalePLGiornaliero))} (${segno(varGiornPerc)}${fmt(varGiornPerc)}%)</span>
+        &nbsp;·&nbsp; P/L totale <span style="color:${plTot>=0?'#4caf82':'#e07070'}">${segno(plTot)}€ ${fmt(Math.abs(plTot))}</span>`;
+    }
+
+    const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('aggiornato').textContent = `Aggiornato alle ${ora}`;
+  }
+
+  caricaDati();
+</script>
+</body>
+</html>
